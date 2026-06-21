@@ -1,1 +1,16 @@
 public/
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+bin/
+lib/
+
+.env
+
+.DS_Store
+Thumbs.db
