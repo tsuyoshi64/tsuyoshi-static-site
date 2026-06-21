@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode, LeafNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
 
 
 class TestHTMLNode(unittest.TestCase):
@@ -49,6 +49,82 @@ class TestLeafNode(unittest.TestCase):
         node: LeafNode = LeafNode("h1", "Title", {"id": "main"})
         expected_repr = "LeafNode(h1, Title, {'id': 'main'})"
         self.assertEqual(repr(node), expected_repr)
+
+
+class TestParentNode(unittest.TestCase):
+    def test_to_html_with_children(self):
+        child_node: LeafNode = LeafNode("span", "child")
+        parent_node: ParentNode = ParentNode("div", [child_node])
+        self.assertEqual(parent_node.to_html(), "<div><span>child</span></div>")
+
+    def test_to_html_with_grandchildren(self):
+        grandchild_node: LeafNode = LeafNode("b", "grandchild")
+        child_node: ParentNode = ParentNode("span", [grandchild_node])
+        parent_node: ParentNode = ParentNode("div", [child_node])
+        self.assertEqual(
+            parent_node.to_html(), "<div><span><b>grandchild</b></span></div>"
+        )
+
+    def test_to_html_many_children(self):
+        node: ParentNode = ParentNode(
+            "p",
+            [
+                LeafNode("b", "Bold Text"),
+                LeafNode(None, "Normal Text"),
+                LeafNode("i", "Italic Text"),
+                LeafNode(None, "Normal Text"),
+            ],
+        )
+        self.assertEqual(
+            node.to_html(),
+            "<p><b>Bold Text</b>Normal Text<i>Italic Text</i>Normal Text</p>",
+        )
+
+    def test_to_html_miserably_deeply_nested(self):
+        node: ParentNode = ParentNode(
+            "div",
+            [
+                ParentNode(
+                    "ul",
+                    [
+                        ParentNode("li", [LeafNode("a", "Item 1", {"href": "/1"})]),
+                        ParentNode("li", [LeafNode("span", "Item 2")]),
+                    ],
+                    {"class": "list-wrapper"},
+                )
+            ],
+            {"id": "main-container"},
+        )
+        expected = (
+            '<div id="main-container">'
+            '<ul class="list-wrapper">'
+            '<li><a href="/1">Item 1</a></li>'
+            "<li><span>Item 2</span></li>"
+            "</ul>"
+            "</div>"
+        )
+        self.assertEqual(node.to_html(), expected)
+
+        def test_to_html_empty_children_list(self):
+            node: ParentNode = ParentNode("div", [])
+            self.assertEqual(node.to_html(), "<div></div>")
+
+        def test_to_html_missing_tag_raises_error(self):
+            node: ParentNode = ParentNode(None, [LeafNode("span", "text")])
+            with self.assertRaises(ValueError) as context:
+                node.to_html()
+            self.assertEqual(
+                str(context.exception), "All parent nodes should have a tag."
+            )
+
+        def test_to_html_missing_children_raises_error(self):
+            node: ParentNode = ParentNode("div", None)
+            with self.assertRaises(ValueError) as context:
+                node.to_html()
+            self.assertEqual(
+                str(context.exception),
+                "All parent should have their children (I bet you understand that).",
+            )
 
 
 if __name__ == "__main__":
