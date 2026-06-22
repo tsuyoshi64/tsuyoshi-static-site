@@ -1,6 +1,6 @@
 import unittest
 
-from markdown_blocks import markdown_to_blocks
+from markdown_blocks import BlockType, block_to_block_type, markdown_to_blocks
 
 
 class TestMarkdownToBlocks(unittest.TestCase):
@@ -67,25 +67,54 @@ class TestMarkdownToBlocks(unittest.TestCase):
             ],
         )
 
-    def test_mixed_list_types_and_blockquotes(self):
-        md = """
-        1. Ordered item one
-        2. Ordered item two
 
-        > This is a blockquote
-        > spanning multiple consecutive lines
-
-        - Unordered item
-        - Another unordered item
-    """
-        blocks = markdown_to_blocks(md)
+class TestBlockToBlockType(unittest.TestCase):
+    def test_headings(self):
+        self.assertEqual(block_to_block_type("# Heading 1"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("###### Heading 6"), BlockType.HEADING)
         self.assertEqual(
-            blocks,
-            [
-                "1. Ordered item one\n2. Ordered item two",
-                "> This is a blockquote\n> spanning multiple consecutive lines",
-                "- Unordered item\n- Another unordered item",
-            ],
+            block_to_block_type("####### Too many hashes"), BlockType.PARAGRAPH
+        )
+        self.assertEqual(block_to_block_type("#NoSpace"), BlockType.PARAGRAPH)
+
+    def test_code_blocks(self):
+        code_block = "```\ndef hello():\n    print('world')\n```"
+        self.assertEqual(block_to_block_type(code_block), BlockType.CODE)
+        self.assertEqual(
+            block_to_block_type("``` incomplete code"), BlockType.PARAGRAPH
+        )
+
+    def test_quote_blocks(self):
+        self.assertEqual(block_to_block_type("> Single quote line"), BlockType.QUOTE)
+        self.assertEqual(
+            block_to_block_type("> Line 1\n>Line 2\n> Line 3"), BlockType.QUOTE
+        )
+        self.assertEqual(
+            block_to_block_type("> Line 1\n Missing bracket"), BlockType.PARAGRAPH
+        )
+
+    def test_unordered_lists(self):
+        self.assertEqual(
+            block_to_block_type("- Item 1\n- Item 2"), BlockType.UNORDERED_LIST
+        )
+        self.assertEqual(block_to_block_type("-Item 1 no space"), BlockType.PARAGRAPH)
+        self.assertEqual(
+            block_to_block_type("- Item 1\nNormal line"), BlockType.PARAGRAPH
+        )
+
+    def test_ordered_lists(self):
+        self.assertEqual(
+            block_to_block_type("1. First\n2. Second\n3. Third"), BlockType.ORDERED_LIST
+        )
+        self.assertEqual(
+            block_to_block_type("1. First\n3. Out of order"), BlockType.PARAGRAPH
+        )
+        self.assertEqual(block_to_block_type("2. Missing start"), BlockType.PARAGRAPH)
+        self.assertEqual(block_to_block_type("1.No space"), BlockType.PARAGRAPH)
+
+    def test_paragraphs(self):
+        self.assertEqual(
+            block_to_block_type("Just a normal paragraph line."), BlockType.PARAGRAPH
         )
 
 
