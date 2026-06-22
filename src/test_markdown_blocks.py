@@ -46,6 +46,48 @@ class TestMarkdownToBlocks(unittest.TestCase):
         expected = ["Just one continuous block of text."]
         self.assertEqual(markdown_to_blocks(markdown), expected)
 
+    def test_headings_and_text(self):
+        md = """
+        # Primary Heading
+
+        This is a paragraph beneath the primary heading.
+
+        ## Secondary Heading
+
+        This paragraph has **bold** and *italic* text.
+    """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "# Primary Heading",
+                "This is a paragraph beneath the primary heading.",
+                "## Secondary Heading",
+                "This paragraph has **bold** and *italic* text.",
+            ],
+        )
+
+    def test_mixed_list_types_and_blockquotes(self):
+        md = """
+        1. Ordered item one
+        2. Ordered item two
+
+        > This is a blockquote
+        > spanning multiple consecutive lines
+
+        - Unordered item
+        - Another unordered item
+    """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "1. Ordered item one\n2. Ordered item two",
+                "> This is a blockquote\n> spanning multiple consecutive lines",
+                "- Unordered item\n- Another unordered item",
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
