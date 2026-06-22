@@ -1,7 +1,11 @@
 import unittest
 
 from textnode import TextNode, TextType, text_node_to_html_node
-from utils.helper import split_nodes_delimiter
+from utils.helper import (
+    extract_markdown_images,
+    extract_markdown_links,
+    split_nodes_delimiter,
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -152,6 +156,39 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         node: TextNode = TextNode("I am **Umamusume", TextType.NORMAL)
         with self.assertRaises(ValueError):
             split_nodes_delimiter([node], "**", TextType.BOLD)
+
+
+class TestMarkdownExtraction(unittest.TestCase):
+    def test_extract_markdown_images(self):
+        text = "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        matches = extract_markdown_images(text)
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_multiple_images(self):
+        text = "Here is ![one](url1.png) and another ![two](url2.jpg)"
+        matches = extract_markdown_images(text)
+        self.assertListEqual([("one", "url1.png"), ("two", "url2.jpg")], matches)
+
+    def test_extract_images_no_matches(self):
+        text = "This text has standard [links](https://link.com) but zero images."
+        matches = extract_markdown_images(text)
+        self.assertListEqual([], matches)
+
+    def test_extract_markdown_links(self):
+        text = "This is text with a [link](https://example.com)"
+        matches = extract_markdown_links(text)
+        self.assertListEqual([("link", "https://example.com")], matches)
+
+    def test_extract_multiple_links(self):
+        text = "Click [here](url1) or check this [doc](url2)"
+        matches = extract_markdown_links(text)
+        self.assertListEqual([("here", "url1"), ("doc", "url2")], matches)
+
+    def test_links_ignores_images(self):
+        text = "This has an ![image](img_url) and a plain [link](link_url)"
+        matches = extract_markdown_links(text)
+        # It should ignore the image and only capture the link
+        self.assertListEqual([("link", "link_url")], matches)
 
 
 if __name__ == "__main__":

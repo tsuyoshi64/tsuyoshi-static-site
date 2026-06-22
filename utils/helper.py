@@ -1,3 +1,5 @@
+import re
+
 from textnode import TextNode, TextType
 
 
@@ -31,3 +33,19 @@ def split_nodes_delimiter(
                 split_nodes.append(TextNode(part, text_type))
         new_nodes.extend(split_nodes)
     return new_nodes
+
+
+def extract_markdown_images(text: str) -> list[tuple[str]]:
+    # !         -> Matches the exclamation mark for images
+    # \[(.*?)\] -> Captures everything inside the square brackets (alt text) non-greedily
+    # \((.*?)\) -> Captures everything inside the parentheses (URL) non-greedily
+    pattern: str = r"!\[(.*?)\]\((.*?)\)"
+    matches: list[tuple[str]] = re.findall(pattern, text)
+    return matches
+
+
+def extract_markdown_links(text: str) -> list[tuple[str]]:
+    # (?<!\!) ensures the link does not have an exclamation mark in front of it
+    pattern: str = r"(?<!\!)\[(.*?)\]\((.*?)\)"
+    matches: list[tuple[str]] = re.findall(pattern, text)
+    return matches
