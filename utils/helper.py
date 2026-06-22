@@ -1,4 +1,5 @@
 import re
+from typing import Text
 
 from textnode import TextNode, TextType
 
@@ -35,17 +36,77 @@ def split_nodes_delimiter(
     return new_nodes
 
 
-def extract_markdown_images(text: str) -> list[tuple[str]]:
+def extract_markdown_images(text: str) -> list[tuple[str, str]]:
     # !         -> Matches the exclamation mark for images
     # \[(.*?)\] -> Captures everything inside the square brackets (alt text) non-greedily
     # \((.*?)\) -> Captures everything inside the parentheses (URL) non-greedily
     pattern: str = r"!\[(.*?)\]\((.*?)\)"
-    matches: list[tuple[str]] = re.findall(pattern, text)
+    matches: list[tuple[str, str]] = re.findall(pattern, text)
     return matches
 
 
-def extract_markdown_links(text: str) -> list[tuple[str]]:
+def extract_markdown_links(text: str) -> list[tuple[str, str]]:
     # (?<!\!) ensures the link does not have an exclamation mark in front of it
     pattern: str = r"(?<!\!)\[(.*?)\]\((.*?)\)"
-    matches: list[tuple[str]] = re.findall(pattern, text)
+    matches: list[tuple[str, str]] = re.findall(pattern, text)
     return matches
+
+
+def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes: list[TextNode] = []
+    for old in old_nodes:
+        if old.text_type != TextType.NORMAL:
+            new_nodes.append(old)
+            continue
+
+        original_text: str = old.text
+        images: list[tuple[str, str]] = extract_markdown_images(original_text)
+
+        if len(images) == 0:
+            new_nodes.append(old)
+            continue
+
+        for alt_text, url in images:
+            # Split once per loop to safely isolate the current image
+            sections: list[str] = original_text.split(f"![{alt_text}]({url})", 1)
+            # Only splitted once so there should be only two parts
+            if len(sections) != 2:
+                continue
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], TextType.NORMAL))
+            new_nodes.append(TextNode(alt_text, TextType.IMAGE, url))
+            original_text: str = sections[1]
+
+        if original_text != "":
+            new_nodes.append(TextNode(original_text, TextType.NORMAL))
+
+    return new_nodes
+
+
+def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes: list[TextNode] = []
+    for old in old_nodes:
+        if old.text_type != TextType.NORMAL:
+            new_nodes.append(old)
+            continue
+
+        original_text: str = old.text
+        links: list[tuple[str, str]] = extract_markdown_links(original_text)
+
+        if len(links) == 0:
+            new_nodes.append(old)
+            continue
+
+        for alt_text, url in links:
+            sections: list[str] = original_text.split(f"[{alt_text}]({url})", 1)
+            if len(sections) != 2:
+                continue
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], TextType.NORMAL))
+            new_nodes.append(TextNode(alt_text, TextType.LINK, url))
+            original_text: str = sections[1]
+
+        if original_text != "":
+            new_nodes.append(TextNode(original_text, TextType.NORMAL))
+
+    return new_nodes

@@ -5,6 +5,8 @@ from utils.helper import (
     extract_markdown_images,
     extract_markdown_links,
     split_nodes_delimiter,
+    split_nodes_image,
+    split_nodes_link,
 )
 
 
@@ -190,6 +192,129 @@ class TestMarkdownExtraction(unittest.TestCase):
         # It should ignore the image and only capture the link
         self.assertListEqual([("link", "link_url")], matches)
 
+
+class TestSplitNodes(unittest.TestCase):
+    def test_split_link_basic(self):
+        """Test a normal sentence containing a single markdown link"""
+        node = TextNode("Go to [boot dev](https://www.boot.dev) now!", TextType.NORMAL)
+        new_nodes = split_nodes_link([node])
+        expected = [
+            TextNode("Go to ", TextType.NORMAL),
+            TextNode("boot dev", TextType.LINK, "https://www.boot.dev"),
+            TextNode(" now!", TextType.NORMAL),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_link_at_start(self):
+        """Test text starting immediately with a markdown link"""
+        node = TextNode("[boot dev](https://www.boot.dev) is cool", TextType.NORMAL)
+        new_nodes = split_nodes_link([node])
+        expected = [
+            TextNode("boot dev", TextType.LINK, "https://www.boot.dev"),
+            TextNode(" is cool", TextType.NORMAL),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_link_at_end(self):
+        """Test text ending exactly on a markdown link"""
+        node = TextNode("Visit [boot dev](https://www.boot.dev)", TextType.NORMAL)
+        new_nodes = split_nodes_link([node])
+        expected = [
+            TextNode("Visit ", TextType.NORMAL),
+            TextNode("boot dev", TextType.LINK, "https://www.boot.dev"),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_multiple_links(self):
+        """Test multiple distinct markdown links in a sequence"""
+        node = TextNode("Links [a](url_a) and [b](url_b) here", TextType.NORMAL)
+        new_nodes = split_nodes_link([node])
+        expected = [
+            TextNode("Links ", TextType.NORMAL),
+            TextNode("a", TextType.LINK, "url_a"),
+            TextNode(" and ", TextType.NORMAL),
+            TextNode("b", TextType.LINK, "url_b"),
+            TextNode(" here", TextType.NORMAL),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_consecutive_identical_links(self):
+        """Test consecutive duplicate links to verify sequential split consumption works"""
+        node = TextNode("[link](url)[link](url)", TextType.NORMAL)
+        new_nodes = split_nodes_link([node])
+        expected = [
+            TextNode("link", TextType.LINK, "url"),
+            TextNode("link", TextType.LINK, "url"),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_no_links(self):
+        """Test text containing no links remains completely untouched"""
+        node = TextNode("Just plain text with nothing special.", TextType.NORMAL)
+        new_nodes = split_nodes_link([node])
+        self.assertEqual(new_nodes, [node])
+
+    def test_split_image_basic(self):
+        """Test a normal sentence containing a single markdown image"""
+        node = TextNode("Check out ![logo](https://boot.dev)!", TextType.NORMAL)
+        new_nodes = split_nodes_image([node])
+        expected = [
+            TextNode("Check out ", TextType.NORMAL),
+            TextNode("logo", TextType.IMAGE, "https://boot.dev"),
+            TextNode("!", TextType.NORMAL),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_image_at_start(self):
+        """Test text starting immediately with a markdown image"""
+        node = TextNode("![logo](https://boot.dev) text", TextType.NORMAL)
+        new_nodes = split_nodes_image([node])
+        expected = [
+            TextNode("logo", TextType.IMAGE, "https://boot.dev"),
+            TextNode(" text", TextType.NORMAL),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_multiple_images(self):
+        """Test parsing multiple distinct images across a block of text"""
+        node = TextNode("![one](url1) then ![two](url2)", TextType.NORMAL)
+        new_nodes = split_nodes_image([node])
+        expected = [
+            TextNode("one", TextType.IMAGE, "url1"),
+            TextNode(" then ", TextType.NORMAL),
+            TextNode("two", TextType.IMAGE, "url2"),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_split_no_images(self):
+        """Test text containing no images remains completely untouched"""
+        node = TextNode("Just plain text without graphics.", TextType.NORMAL)
+        new_nodes = split_nodes_image([node])
+        self.assertEqual(new_nodes, [node])
+
+    # ==========================================
+    # SYSTEM BOUNDARY & STRUCTURAL TESTS
+    # ==========================================
+
+    def test_ignores_non_normal_nodes(self):
+        """Verify formatted nodes (like BOLD) are skipped and not split further"""
+        bold_node = TextNode("Don't change [link](url)", TextType.BOLD)
+        image_node = TextNode("Don't touch ![alt](url)", TextType.IMAGE)
+
+        link_split = split_nodes_link([bold_node])
+        image_split = split_nodes_image([image_node])
+
+        self.assertEqual(link_split, [bold_node])
+        self.assertEqual(image_split, [image_node])
+
+    def test_empty_list(self):
+        """Passing an empty node collection returns an empty list safely"""
+        self.assertEqual(split_nodes_link([]), [])
+        self.assertEqual(split_nodes_image([]), [])
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
