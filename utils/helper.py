@@ -1,5 +1,4 @@
 import re
-from typing import Text
 
 from textnode import TextNode, TextType
 
