@@ -1,6 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType, text_node_to_html_node
+from utils.helper import split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -61,6 +62,96 @@ class TestTextNodeToHTMLNode(unittest.TestCase):
         node: TextNode = TextNode("Bypassed Type", "Invalid enum value")  # type: ignore
         with self.assertRaises(ValueError):
             text_node_to_html_node(node)
+
+
+class TestSplitNodesDelimiter(unittest.TestCase):
+    def test_code_block(self):
+        node: TextNode = TextNode("This is a `code block` word.", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("This is a ", TextType.NORMAL),
+                TextNode("code block", TextType.CODE),
+                TextNode(" word.", TextType.NORMAL),
+            ],
+        )
+
+    def test_bold(self):
+        node: TextNode = TextNode("This is a **bold block** word.", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter([node], "**", TextType.BOLD)
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("This is a ", TextType.NORMAL),
+                TextNode("bold block", TextType.BOLD),
+                TextNode(" word.", TextType.NORMAL),
+            ],
+        )
+
+    def test_italic(self):
+        node: TextNode = TextNode("This is a *italic block* word.", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter([node], "*", TextType.ITALIC)
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("This is a ", TextType.NORMAL),
+                TextNode("italic block", TextType.ITALIC),
+                TextNode(" word.", TextType.NORMAL),
+            ],
+        )
+
+    def test_multiple_delimiters_same_type(self):
+        node: TextNode = TextNode("Use `a` and `b` in your code.", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("Use ", TextType.NORMAL),
+                TextNode("a", TextType.CODE),
+                TextNode(" and ", TextType.NORMAL),
+                TextNode("b", TextType.CODE),
+                TextNode(" in your code.", TextType.NORMAL),
+            ],
+        )
+
+    def test_starts_and_end_with_delimiter(self):
+        node: TextNode = TextNode("**Bold is Bold**", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter([node], "**", TextType.BOLD)
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("Bold is Bold", TextType.BOLD),
+            ],
+        )
+
+    def test_multiple_nodes(self):
+        node1: TextNode = TextNode("Text with `code`", TextType.NORMAL)
+        node2: TextNode = TextNode("Bold node", TextType.BOLD)
+        node3: TextNode = TextNode("Another text with `code`", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter(
+            [node1, node2, node3], "`", TextType.CODE
+        )
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("Text with ", TextType.NORMAL),
+                TextNode("code", TextType.CODE),
+                node2,
+                TextNode("Another text with ", TextType.NORMAL),
+                TextNode("code", TextType.CODE),
+            ],
+        )
+
+    def test_no_delimiter(self):
+        node: TextNode = TextNode("Portugal", TextType.NORMAL)
+        new_nodes: list[TextNode] = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(new_nodes, [node])
+
+    def test_unclosed_delimiter(self):
+        node: TextNode = TextNode("I am **Umamusume", TextType.NORMAL)
+        with self.assertRaises(ValueError):
+            split_nodes_delimiter([node], "**", TextType.BOLD)
 
 
 if __name__ == "__main__":
