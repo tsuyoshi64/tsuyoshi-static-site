@@ -9,6 +9,14 @@ template and a CSS stylesheet.
 > [Boot.dev](https://www.boot.dev) backend developer path. It is not intended
 > for production use — the goal was to understand how static site generators
 > work by building one from scratch.
+
+---
+
+## Built With
+- Python 3
+- Standard libraries (`os`, `pathlib`, `shutil`, `re`)
+- No frameworks, no dependencies
+
 ---
 
 ## How It Works
@@ -21,44 +29,9 @@ template and a CSS stylesheet.
 
 ---
 
-## Project Structure
-```
-.
-├── content/ # Markdown source files
-│ ├── index.md
-│ ├── contact/
-│ │ └── index.md
-│ └── blog/
-│ ├── glorfindel/
-│ │ └── index.md
-│ ├── majesty/
-│ │ └── index.md
-│ └── tom/
-│ └── index.md
-├── static/ # Static assets (copied as-is to public/)
-│ ├── index.css
-│ └── images/
-├── src/
-│ ├── main.py # Entry point
-│ ├── copystatic.py # Recursively copies static assets
-│ ├── gencontent.py # Page generation logic
-│ ├── htmlnode.py # HTML node tree representation
-│ ├── inline_markdown.py # Inline markdown parsing (bold, italic, code, etc.)
-│ ├── markdown_blocks.py # Block-level markdown parsing
-│ ├── textnode.py # Text node representation
-│ ├── test_htmlnode.py # Tests for htmlnode.py
-│ ├── test_markdown.py # Tests for markdown_blocks.py
-│ ├── test_pagegen.py # Tests for gencontent.py
-│ └── test_textnode.py # Tests for textnode.py
-├── template.html # Base HTML layout
-└── main.sh # Build and serve script
-```
-
----
-
 ## Requirements
 
-- Python 3.xGenerate all HTML pages into public/
+- Python 3.x
 - No external dependencies — standard library only
 
 ---
@@ -89,7 +62,7 @@ This will:
 |Bold|`**bold**`|
 |Italic|`_italic_`|
 |Inline code|`` `code` ``|
-|Code blocks|`` ```fencde blocks ``|
+|Code blocks|` ``` `fencde blocks|
 |Links|`[text](url)`|
 |Images|`![alt](url)`|
 |Blockquotes|`> quote`|
@@ -121,3 +94,8 @@ content/
 
 ## Author
 [tsuyoshi64](https://github.com/tsuyoshi64) - guided by [Boot.dev](https://www.boot.dev)
+
+---
+
+## License
+[MIT](./LICENSE)
