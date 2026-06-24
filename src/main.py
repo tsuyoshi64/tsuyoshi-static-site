@@ -2,19 +2,15 @@ import os
 import shutil
 
 from copystatic import copy_files_recursive
-from gencontent import generate_page
-from textnode import TextNode, TextType
+from gencontent import generate_pages_recursive
 
 dir_path_static = "./static"
 dir_path_public = "./public"
+dir_path_template = "./template.html"
+dir_path_content = "./content"
 
 
 def main():
-    textnode = TextNode(
-        "This is my github", TextType.LINK, "https://github.com/tsuyoshi64"
-    )
-    # print(textnode)
-
     print("Deleting public directory...")
     if os.path.exists(dir_path_public):
         shutil.rmtree(dir_path_public)
@@ -22,7 +18,9 @@ def main():
     print("Copying static files to public directory...")
     copy_files_recursive(dir_path_static, dir_path_public)
 
-    generate_page("content/index.md", "template.html", "public/index.html")
+    print("Starting site generation...")
+    generate_pages_recursive(dir_path_content, dir_path_template, dir_path_public)
+    print("Site generation complete!")
 
 
 if __name__ == "__main__":
