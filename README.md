@@ -1,2 +1,123 @@
-# Hi this is my another project
-# Imma building a static site generator
+# Static Site Generator
+
+A static site generator built from scratch in Python. It converts a directory
+of Markdown files into a fully rendered HTML website, using a single HTML
+template and a CSS stylesheet.
+
+
+> **Note:** This project was built for educational purposes as part of the
+> [Boot.dev](https://www.boot.dev) backend developer path. It is not intended
+> for production use — the goal was to understand how static site generators
+> work by building one from scratch.
+---
+
+## How It Works
+
+1. The `public/` directory is wiped clean on every run
+2. Static assets (CSS, images) are copied from `static/` to `public/`
+3. Every `.md` file in `content/` is recursively discovered and converted to HTML
+4. Each HTML page is rendered using `template.html` as the base layout
+5. The output mirrors the `content/` directory structure inside `public/`
+
+---
+
+## Project Structure
+```
+.
+├── content/ # Markdown source files
+│ ├── index.md
+│ ├── contact/
+│ │ └── index.md
+│ └── blog/
+│ ├── glorfindel/
+│ │ └── index.md
+│ ├── majesty/
+│ │ └── index.md
+│ └── tom/
+│ └── index.md
+├── static/ # Static assets (copied as-is to public/)
+│ ├── index.css
+│ └── images/
+├── src/
+│ ├── main.py # Entry point
+│ ├── copystatic.py # Recursively copies static assets
+│ ├── gencontent.py # Page generation logic
+│ ├── htmlnode.py # HTML node tree representation
+│ ├── inline_markdown.py # Inline markdown parsing (bold, italic, code, etc.)
+│ ├── markdown_blocks.py # Block-level markdown parsing
+│ ├── textnode.py # Text node representation
+│ ├── test_htmlnode.py # Tests for htmlnode.py
+│ ├── test_markdown.py # Tests for markdown_blocks.py
+│ ├── test_pagegen.py # Tests for gencontent.py
+│ └── test_textnode.py # Tests for textnode.py
+├── template.html # Base HTML layout
+└── main.sh # Build and serve script
+```
+
+---
+
+## Requirements
+
+- Python 3.xGenerate all HTML pages into public/
+- No external dependencies — standard library only
+
+---
+
+## Usage
+
+### Build and Serve
+
+```bash
+./main.sh
+```
+This will:
+* Generate all HTML pages into public/
+* Start a local host server at http://localhost:8888
+
+### Run Tests
+
+```bash
+./test.sh
+```
+
+---
+
+## Markdown Features Supported
+|Feature|Syntax|
+|---|---|
+|Heading|`# H1`, `## H2`, etc.|
+|Bold|`**bold**`|
+|Italic|`_italic_`|
+|Inline code|`` `code` ``|
+|Code blocks|`` ```fencde blocks ``|
+|Links|`[text](url)`|
+|Images|`![alt](url)`|
+|Blockquotes|`> quote`|
+|Ordered lists|`1. item`|
+|Unordered lists|`- item`|
+
+---
+
+## Template System
+Pages are rendered by injecting content into `template.html` using two placeholder tokens:
+* `{{ Title }}` — replaced with the first # H1 heading from the markdown file
+* `{{ Content }}` — replaced with the full HTML-converted body
+
+---
+
+## Adding New Pages
+1. Create a new folder inside content/
+2. Add an index.md file with a # Title as the first heading
+3. Run ./main.sh — the page will be automatically discovered and generated
+
+Example:
+```
+content/
+└── about/
+    └── index.md   <-- becomes public/about/index.html
+```
+
+---
+
+## Author
+[tsuyoshi64](https://github.com/tsuyoshi64) - guided by [Boot.dev](https://www.boot.dev)
