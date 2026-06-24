@@ -14,18 +14,17 @@ template and a CSS stylesheet.
 
 ## Built With
 - Python 3
-- Standard libraries (`os`, `pathlib`, `shutil`, `re`)
+- Standard libraries (`os`, `pathlib`, `shutil`, `re`, `sys`)
 - No frameworks, no dependencies
 
 ---
 
 ## How It Works
-
-1. The `public/` directory is wiped clean on every run
-2. Static assets (CSS, images) are copied from `static/` to `public/`
+1. The `docs/` directory is wiped clean on every run
+2. Static assets (CSS, images) are copied from `static/` to `docs/`
 3. Every `.md` file in `content/` is recursively discovered and converted to HTML
-4. Each HTML page is rendered using `template.html` as the base layout
-5. The output mirrors the `content/` directory structure inside `public/`
+4. Each HTML page is rendered using `template.html` as the base layout, rewriting relative asset paths to support nested subdirectories (such as GitHub Pages subfolders)
+5. The output mirrors the `content/` directory structure inside `docs/`
 
 ---
 
@@ -38,7 +37,7 @@ template and a CSS stylesheet.
 
 ## Usage
 
-### Build and Serve
+### Build and Serve (local)
 
 ```bash
 ./main.sh
@@ -46,6 +45,17 @@ template and a CSS stylesheet.
 This will:
 * Generate all HTML pages into public/
 * Start a local host server at http://localhost:8888
+
+
+### Build GitHub Pages
+To build the site with a configured subfolder path (useful for hosting on GitHub Pages):
+
+```bash
+./build.sh
+```
+
+This script runs the generator and passes your repository subdirectory as an argument so all internal links (`href` and `src`) are mapped correctly.
+
 
 ### Run Tests
 
