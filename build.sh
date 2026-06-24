@@ -1,1 +1,1 @@
-python3 src/main.py "/tsuyoshi64-static-site/"
+python3 src/main.py "/tsuyoshi-static-site/"
